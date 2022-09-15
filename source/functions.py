@@ -3,6 +3,7 @@ akinshchikov@gmail.com
 """
 
 import os
+import re
 from typing import List, Set
 
 import numpy as np
@@ -109,6 +110,10 @@ def evaluate(check_dir: str = 'check',
                 (raw_points - min_raw_points) / (max_raw_points - min_raw_points) * max_normalized_points + EPSILON
         ).astype(int)
 
+        normalized_points = normalized_points.clip(min=0,
+                                                   max=max_normalized_points,
+                                                   ).astype(int)
+
         normalized_points_list.append(normalized_points)
 
     normalized_points_array: np.ndarray = np.stack(arrays=normalized_points_list,
@@ -120,6 +125,12 @@ def evaluate(check_dir: str = 'check',
                                         )
 
     output[check[0, -problems_count:]] = normalized_points_array
+
+    output['Sum'] = output.sum(axis=1, numeric_only=True)
+
+    output['Rank'] = output['Sum'].rank(ascending=False,
+                                        method='min',
+                                        ).astype(int)
 
     output.to_csv(path_or_buf=f'{output_dir}/output.csv',
                   index=False,
@@ -153,7 +164,37 @@ def get_inversions_list(string: str) -> List[str]:
 
 def get_inversions_set(string: str) -> Set[str]:
     inversions: Set[str] = set()
-    for i in range(0, len(string) - 1):
-        for j in range(i + 1, len(string)):
-            inversions.add(string[i] + string[j])
+
+    bracketless_string = re.sub(pattern='[\[\]]',
+                                repl='',
+                                string=string,
+                                )
+
+    for i in range(0, len(bracketless_string) - 1):
+        for j in range(i + 1, len(bracketless_string)):
+            inversions.add(bracketless_string[i] + bracketless_string[j])
+
+    left_bracket: int = 0
+
+    bracket_counter: int = 0
+
+    for k in range(0, len(string)):
+        if string[k] == '[':
+            if bracket_counter != 0:
+                raise ValueError(f'Wrong brackets usage in answer "{string}".')
+
+            bracket_counter += 1
+
+            left_bracket = k
+
+        if string[k] == ']':
+            if bracket_counter != 1:
+                raise ValueError(f'Wrong brackets usage in answer "{string}".')
+
+            bracket_counter -= 1
+
+            for i in range(left_bracket + 1, k - 1):
+                for j in range(i + 1, k):
+                    inversions.remove(string[i] + string[j])
+
     return inversions

@@ -1,3 +1,4 @@
-First Name,Last Name,1,2,3
-Paolo,Boi,5,3,2
-Alessandro,Salvio,1,2,1
+First Name,Last Name,1,2,3,4,Sum,Rank
+Paolo,Boi,5,3,2,0,10,1
+Alessandro,Salvio,1,2,1,2,6,3
+Gioachino,Greco,0,5,2,3,10,1
